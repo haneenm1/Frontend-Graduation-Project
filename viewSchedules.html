@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schedule Viewer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+
+    :root {
+  --primary-color: #4a90e2;
+  --background-light: #f8f9fa;
+  --text-color: #333;
+  --card-bg: #ffffff;
+  --hover-bg: #e0efff;
+  --shadow-light: rgba(74, 144, 226, 0.15);
+}
+
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--background-light);
+      margin: 0;
+      padding: 0;
+      color: var(--text-color);
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 1.5rem 1rem;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      box-shadow: 0 6px 12px var(--shadow-light);
+      border-radius: 0 0 25px 25px;
+    }
+
+    header button {
+      background-color: transparent;
+      color: white;
+      border: 3px solid white;
+      padding: 0.6rem 1.4rem;
+      cursor: pointer;
+      font-weight: 700;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 6px var(--shadow-light);
+    }
+
+    header button.active,
+    header button:hover {
+      background-color: white;
+      color: var(--primary-color);
+      box-shadow: 0 6px 12px var(--shadow-light);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 2.5rem auto;
+      padding: 1.5rem;
+    }
+
+    .search-box {
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .search-box input {
+      padding: 0.75rem 1rem;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 40px;
+      border: 1.5px solid #87d3c9; /* أخضر متوسط */
+      font-size: 1.1rem;
+      outline-offset: 3px;
+      transition: border-color 0.3s ease;
+    }
+
+    .search-box input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 8px var(--primary-color);
+    }
+
+    .department,
+    .guardian-list {
+      margin-bottom: 2.5rem;
+      background-color: var(--card-bg);
+      padding: 2rem 2.5rem;
+      border-radius: 30px;
+      box-shadow: 0 8px 20px var(--shadow-light);
+    }
+
+    .department h3,
+    .guardian-list h3 {
+      margin-top: 0;
+      font-size: 1.5rem;
+      border-bottom: 2px solid #a8ece3;
+      padding-bottom: 0.8rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    .doctor,
+    .guardian {
+      cursor: pointer;
+      padding: 1rem 1.5rem;
+      margin: 0.7rem 0;
+      background-color: #e8f9f686;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 1.15rem;
+      transition: background-color 0.25s ease, box-shadow 0.25s ease;
+      box-shadow: 0 4px 8px var(--shadow-light);
+
+    }
+
+    .doctor:hover,
+    .guardian:hover {
+      background-color: var(--hover-bg);
+      box-shadow: 0 6px 14px var(--shadow-light);
+    }
+
+    .slot-card {
+  background-color: #ffffff;
+  border-left: 6px solid var(--primary-color);
+  border-radius: 16px;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 4px 12px var(--shadow-light);
+  transition: transform 0.2s ease;
+}
+
+.slot-card:hover {
+  transform: scale(1.02);
+}
+
+.slot-day {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.slot-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.slot-info div {
+  flex: 1 1 45%;
+  background-color: #f4fdfd;
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #d9f2f0;
+}
+
+.slot-info .label {
+  font-weight: bold;
+  color: #555;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+#modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 10px;
+  padding: 25px 30px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: visible;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  height: auto;
+  width: auto;
+  box-sizing: border-box;
+}
+
+
+    .modal-close {
+      float: right;
+      font-size: 2rem;
+      font-weight: 900;
+      cursor: pointer;
+      color: var(--primary-color);
+      transition: color 0.3s ease;
+    }
+
+    .modal-close:hover {
+      color: #2a9d8fcc;
+    }
+    .dep-badge {
+  display: inline-block;
+  background-color: #d1f3ef8a;
+  color:#5c01018a;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 15px;
+  margin: 2px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px var(--shadow-light);
+}
+.calendar-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 10px 15px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.calendar-table thead th {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.calendar-table tbody td {
+    background-color: #ffffff;
+  box-shadow: 0 1px 6px var(--shadow-light);
+  padding: 12px 10px;
+  border-radius: 8px;
+  vertical-align: top;
+  min-width: 160px;
+  box-shadow: 0 1px 6px rgba(0, 86, 179, 0.15);
+}
+
+.session-card {
+  position: relative;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+  padding-top: 32px; 
+}
+
+
+.session-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 86, 179, 0.3);
+}
+
+.session-card p {
+  margin: 5px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+
+.session-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.action-btn {
+  padding: 7px 14px;
+  font-size: 13px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.edit-btn {
+  background-color: #28a745;
+}
+
+.edit-btn:hover {
+  background-color: #218838;
+}
+
+.cancel-btn {
+  background-color: #dc3545;
+}
+
+.cancel-btn:hover {
+  background-color: #c82333;
+}
+
+
+.session-action-btn {
+  position: absolute;
+  top: 5px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  color: #555;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: background 0.3s, color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.session-action-btn:hover {
+  background: #007bff;
+  color: white;
+  box-shadow: 0 0 6px #007bffaa;
+}
+
+/* زر التعديل في الزاوية اليمنى العليا */
+.session-action-btn.edit-btn {
+  top: 5px;
+  right: 35px;
+}
+
+/* زر الحذف بجانبه */
+.session-action-btn.delete-btn {
+  top: 5px;
+  right: 5px;
+}
+.modal {
+  position: fixed;
+  display: flex;
+  z-index: 999;
+  justify-content: center;
+  align-items: center;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  min-width: 300px;
+  max-width: 90%;
+  position: relative;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+}
+
+.modal-content .close {
+  position: absolute;
+  right: 10px;
+  top: 5px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+
+
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: center;
+      }
+      .search-box input {
+        max-width: 100%;
+      }
+    }
+
+
+  </style>
+  
+</head>
+<body>
+  <header>
+    <button id="specialistsTab" class="active">Specialists</button>
+    <button id="guardiansTab">Guardians</button>
+  </header>
+
+  <div class="container">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search by name...">
+    </div>
+    <div id="specialistsView"></div>
+    <div id="guardiansView" style="display:none;"></div>
+    <div id="scheduleDetails"></div>
+  </div>
+
+  <div id="modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span id="closeModal" class="modal-close">&times;</span>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+ <h4 style="position: absolute; right:500px"><a href="../Html/addExtraSession.html">Add Extra Sessions</a></h4>
+
+  <div id="editModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeEditModal()">&times;</span>
+      <h3>Edit Session</h3>
+      <label>New Day:</label>
+      <select id="editDayInput">
+        <option>Sunday</option>
+        <option>Monday</option>
+        <option>Tuesday</option>
+        <option>Wednesday</option>
+        <option>Thursday</option>
+      </select>
+      <label>New Time:</label>
+      <input type="time" id="editTimeInput">
+      <button onclick="submitEdit()">Save</button>
+    </div>
+  </div>
+  
+
+  <script>
+    const baseURL = "http://localhost:4000/api/v1";
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem("user"));
+    const senderName = user?.name || "the administrator";
+
+
+    if (!token) {
+      alert("No token found. Please login again.");
+      window.location.href = "/login.html";
+    }
+
+    const specialistsTab = document.getElementById("specialistsTab");
+    const guardiansTab = document.getElementById("guardiansTab");
+    const specialistsView = document.getElementById("specialistsView");
+    const guardiansView = document.getElementById("guardiansView");
+    const searchInput = document.getElementById("searchInput");
+    const modal = document.getElementById("modal");
+    const modalContent = document.getElementById("modalContent");
+    const closeModal = document.getElementById("closeModal");
+
+    let allDepartments = [];
+
+    specialistsTab.onclick = () => {
+      specialistsTab.classList.add("active");
+      guardiansTab.classList.remove("active");
+      specialistsView.style.display = "block";
+      guardiansView.style.display = "none";
+    };
+
+    guardiansTab.onclick = () => {
+      guardiansTab.classList.add("active");
+      specialistsTab.classList.remove("active");
+      specialistsView.style.display = "none";
+      guardiansView.style.display = "block";
+    };
+
+    closeModal.onclick = () => modal.style.display = "none";
+    window.onclick = (e) => { if (e.target == modal) modal.style.display = "none"; };
+
+    searchInput.addEventListener("input", () => {
+  const keyword = searchInput.value.toLowerCase();
+  renderDoctorsList(keyword); 
+});
+
+
+
+    async function fetchDepartments() {
+  try {
+    const res = await fetch(`${baseURL}/dep/allDep`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    allDepartments = data.departments;
+    renderDoctorsList(); // استدعاء الدالة الجديدة
+  } catch (err) {
+    console.error("Failed to fetch departments", err);
+  }
+}
+
+function renderDoctorsList(filter = "") {
+  specialistsView.innerHTML = "";
+
+  const doctorMap = new Map(); 
+
+  allDepartments.forEach(dep => {
+    (dep.doctors || []).forEach(doc => {
+      if (!doctorMap.has(doc.doctorId)) {
+        doctorMap.set(doc.doctorId, {
+          doctorId: doc.doctorId,
+          doctorName: doc.doctorName,
+          departments: new Set([dep.name])
+        });
+      } else {
+        doctorMap.get(doc.doctorId).departments.add(dep.name);
+      }
+    });
+  });
+
+  const filteredDoctors = Array.from(doctorMap.values()).filter(doc =>
+    doc.doctorName.toLowerCase().includes(filter)
+  );
+
+  const listContainer = document.createElement("div");
+  listContainer.className = "guardian-list"; // استخدام نفس تنسيق الحاوية
+  listContainer.innerHTML = `<h3>Specialists</h3>`;
+
+  filteredDoctors.forEach(doc => {
+    const docDiv = document.createElement("div");
+    docDiv.className = "doctor";
+    docDiv.innerHTML = `
+      <div style="font-size: 1.2rem;">${doc.doctorName}</div>
+      <div style="margin-top: 5px;">
+        ${Array.from(doc.departments).map(dep => `
+          <span class="dep-badge">${dep}</span>
+        `).join('')}
+      </div>
+    `;
+    docDiv.onclick = () => fetchDoctorSchedule(doc.doctorId, doc.doctorName);
+    listContainer.appendChild(docDiv);
+  });
+
+  specialistsView.appendChild(listContainer);
+}
+
+
+async function fetchDoctorSchedule(doctorId, doctorName) {
+  try {
+    const res = await fetch(`${baseURL}/Doctor/getS/${doctorId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.schedule) throw new Error("Failed to load");
+
+    const modalContent = document.getElementById("modalContent");
+    modalContent.innerHTML = `<h2 style="cursor: pointer;" onclick="window.location.href='viewotherProfile.html?id=${doctorId}'">Schedule for ${doctorName}</h2>`;
+
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+    const scheduleMap = {};
+    days.forEach(day => scheduleMap[day] = []);
+
+    // Map sessions to days
+    data.schedule.forEach(dayEntry => {
+      dayEntry.times.forEach(slot => {
+        if (slot.status === 'Booked' && days.includes(dayEntry.dayOfWeek)) {
+          slot.dayOfWeek = dayEntry.dayOfWeek; // Inject the day name
+          scheduleMap[dayEntry.dayOfWeek].push(slot);
+        }
+      });
+    });
+
+    // Create calendar table
+    const table = document.createElement("table");
+    table.className = "calendar-table";
+
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    days.forEach(day => {
+      const th = document.createElement("th");
+      th.innerText = day;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    const row = document.createElement("tr");
+
+    days.forEach(day => {
+      const td = document.createElement("td");
+
+      if (scheduleMap[day].length === 0) {
+        td.innerHTML = `<p style="color:#999;">No sessions</p>`;
+      } else {
+        scheduleMap[day].forEach(slot => {
+          const div = document.createElement("div");
+          div.className = "session-card";
+          div.innerHTML = `
+            <p>🕐 Time: ${slot.time}</p>
+            <p>📌 Status: ${slot.status}</p>
+            ${slot.guardian ? `<p>👤 Guardian: <a href="viewotherProfile.html?id=${slot.guardian._id}" style="color: var(--primary-color); text-decoration: underline;">${slot.guardian.name}</a></p>` : ""}
+            ${slot.guardian?.department?.name ? `<p>🏥 Department: ${slot.guardian.department.name}</p>` : ""}
+          `;
+          td.appendChild(div);
+        });
+      }
+
+      row.appendChild(td);
+    });
+
+    tbody.appendChild(row);
+    table.appendChild(tbody);
+    modalContent.appendChild(table);
+
+    modal.style.display = "flex";
+
+  } catch (err) {
+    console.error(err);
+    modalContent.innerHTML = `<p>Failed to load schedule.</p>`;
+    modal.style.display = "flex";
+  }
+}
+
+
+let guardians = [];  
+
+
+async function fetchGuardians() {
+  try {
+    const res = await fetch(`${baseURL}/admin/allUser`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      guardians = data.find.filter(user => user.role === 'guardian'); 
+      renderGuardians();
+    } else {
+      console.error("Failed to fetch guardians:", data.message);
+    }
+  } catch (error) {
+    console.error("Error fetching guardians:", error);
+  }
+}
+
+
+function renderGuardians() {
+  guardiansView.innerHTML = "<div class='guardian-list'><h3>Guardians</h3></div>";
+  const list = guardiansView.querySelector(".guardian-list");
+
+  guardians.forEach(g => {
+    const gDiv = document.createElement("div");
+    gDiv.className = "guardian";
+    gDiv.textContent = g.name; 
+    gDiv.onclick = () => showSchedule(g._id, g.name); 
+    list.appendChild(gDiv);
+  });
+}
+
+
+async function showSchedule(guardianId, guardianName) {
+  try {
+    const res = await fetch(`${baseURL}/Guardian/getSchedule/${guardianId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      const modalContent = document.getElementById("modalContent");
+      modalContent.innerHTML = `<h2 style="cursor: pointer;" onclick="window.location.href='viewotherProfile.html?id=${guardianId}'">Schedule for ${guardianName}</h2>`;
+      const calendarTable = renderCalendar(data.guardianRequests);
+      modalContent.appendChild(calendarTable);
+
+      document.getElementById("modal").style.display = "flex";
+    } else {
+      console.error("Failed to load schedule:", data.message);
+      const modalContent = document.getElementById("modalContent");
+      modalContent.innerHTML = `<p>Failed to load schedule.</p>`;
+      document.getElementById("modal").style.display = "flex";
+    }
+  } catch (err) {
+    console.error(err);
+    const modalContent = document.getElementById("modalContent");
+    modalContent.innerHTML = `<p>Failed to load schedule.</p>`;
+    document.getElementById("modal").style.display = "flex";
+  }
+}
+function renderCalendar(requests) {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+  const scheduleMap = {};
+  days.forEach(day => scheduleMap[day] = []);
+
+  requests.forEach(request => {
+    request.sessions.forEach(session => {
+      session._scheduleId = request._id;
+      session.guardianId = request.guardianId._id; 
+      if (scheduleMap[session.dayOfWeek]) {
+        scheduleMap[session.dayOfWeek].push(session);
+      }
+    });
+  });
+
+  const table = document.createElement("table");
+  table.className = "calendar-table";
+
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  days.forEach(day => {
+    const th = document.createElement("th");
+    th.innerText = day;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  const row = document.createElement("tr");
+
+  days.forEach(day => {
+    const td = document.createElement("td");
+
+    if (scheduleMap[day].length === 0) {
+      td.innerHTML = `<p style="color:#999;">No sessions</p>`;
+    } else {
+      scheduleMap[day].forEach(session => {
+        const div = document.createElement("div");
+        div.className = "session-card";
+        div.innerHTML = `
+          <p><strong>${session.department.name}</strong></p>
+          <p style="cursor: pointer; text-decoration: underline; color:#5c01018a;" onclick="window.location.href='viewotherProfile.html?id=${session.specialistId._id}'">Doctor: ${session.specialistId?.name || "N/A"}</p>
+          <p>Time: ${session.time}</p>
+          ${session.newTime && session.newDay ? `<p style="color: #007bff;">New Time: ${session.newTime} (${session.newDay})</p>` : ""}
+          <div class="session-actions"></div>
+        `;
+
+    
+        const editBtn = document.createElement("button");
+        editBtn.innerHTML = "📝"; // رمز قلم التعديل
+        editBtn.title = "Edit session";
+        editBtn.className = "session-action-btn edit-btn";
+        editBtn.onclick = (e) => {
+          e.stopPropagation();
+          handleEditSession(session);
+        };
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.innerHTML = "🗑️"; // رمز سلة الحذف
+        deleteBtn.title = "Delete session";
+        deleteBtn.className = "session-action-btn delete-btn";
+        deleteBtn.onclick = (e) => {
+          e.stopPropagation();
+          handleDeleteSession(session);
+        };
+
+        div.appendChild(editBtn);
+        div.appendChild(deleteBtn);
+
+        td.appendChild(div);
+      });
+    }
+
+    row.appendChild(td);
+  });
+
+  tbody.appendChild(row);
+  table.appendChild(tbody);
+
+  return table;
+}
+
+
+    function openModal(slot) {
+      modalContent.innerHTML = `
+        <h2>Slot Details</h2>
+        <p><strong>Time:</strong> ${slot.time}</p>
+        <p><strong>Status:</strong> ${slot.status}</p>
+        ${slot.guardian ? `<p><strong>Guardian:</strong> ${slot.guardian.name}</p>` : ''}
+        ${slot.guardian?.department?.name ? `<p><strong>Department:</strong> ${slot.guardian.department.name}</p>` : ''}
+      `;
+      modal.style.display = "flex";
+    }
+
+    fetchDepartments();
+    fetchGuardians();
+
+
+
+let editingSession = null;
+
+function closeEditModal() {
+  document.getElementById("editModal").style.display = "none";
+  editingSession = null;
+}
+
+function handleEditSession(session) {
+  editingSession = session;
+  console.log("Editing session:", editingSession);
+  document.getElementById("editDayInput").value = session.dayOfWeek;
+  document.getElementById("editTimeInput").value = session.time;
+  document.getElementById("editModal").style.display = "flex";
+}
+
+async function submitEdit() {
+  const newDay = document.getElementById("editDayInput").value;
+  const newTime = document.getElementById("editTimeInput").value;
+
+  if (!newDay || !newTime) {
+    alert("Please fill in both fields.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${baseURL}/Guardian/editSession`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+          requestId: editingSession._scheduleId,
+          sessionId: editingSession._id,
+          newDayOfWeek: newDay,
+          newTime: newTime
+})
+
+    });
+
+    const data = await res.json();
+    console.log(data);
+    if (res.ok) {
+      alert("Session updated. A notification has been sent to the guardian.");
+
+      await fetch(`${baseURL}/notification/sendNotification`, {
+      method: "POST",
+      headers: {
+       "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+       },
+      body: JSON.stringify({
+       title: "Session Updated",
+       message: `Your session on ${editingSession.dayOfWeek} at ${editingSession.time} has been changed to ${newDay} at ${newTime} by <Strong>Sky Medical Manger </Strong>${senderName}. If you object, please contact us or request a change.<a herf="../SchedulesPage(Gurdian).html">Click here</a>`,
+       userIds: [editingSession.guardianId]
+  })
+});
+      const guardianId = editingSession.guardianId;
+      closeEditModal();
+      showSchedule(guardianId, ""); 
+
+    } else {
+      alert("Failed to update session.");
+    }
+  } catch (error) {
+    console.error(error);
+    alert(`Error while updating session. ${data.message}`);
+  }
+}
+
+
+
+
+async function handleDeleteSession(session) {
+  const confirmDelete = confirm(`Are you sure you want to delete this session?\nDay: ${session.dayOfWeek}\nTime: ${session.time}`);
+  if (!confirmDelete) return;
+
+  try {
+    const res = await fetch(`${baseURL}/Guardian/deleteSession`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        requestId: session._scheduleId,
+        sessionId: session._id
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      alert("✅ Session deleted successfully.");
+      await fetch(`${baseURL}/notification/sendNotification`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: "Session Deleted",
+          message: `Your session on ${session.dayOfWeek} at ${session.time} has been cancelled by <Strong>Sky Medical Manger</Strong> ${senderName}.<a herf="../SchedulesPage(Gurdian).html">Click here</a>`,
+          userIds: [session.guardianId]
+        })
+      });
+
+      showSchedule(session.guardianId, "");
+
+    } else {
+      alert(`❌ Failed to delete session: ${data.message}`);
+    }
+
+  } catch (error) {
+    console.error("Error deleting session:", error);
+    alert("❌ An error occurred while deleting the session.");
+  }
+}
+
+
+
+
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Profile View</title>
+  <link rel="stylesheet" href="../assets/css/font.css">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #eef1f5;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .profile-card {
+      background: white;
+      border-radius: 16px;
+      padding: 40px 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      width: 100%;
+      transition: transform 0.3s ease;
+    }
+
+    .profile-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .profile-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .profile-image {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #3b7ddd;
+      margin-bottom: 15px;
+      box-shadow: 0 6px 15px rgba(59, 125, 221, 0.3);
+    }
+
+    .profile-header h2 {
+      margin: 10px 0 5px;
+      font-size: 26px;
+      color: #2c3e50;
+    }
+
+    .profile-header p {
+      margin: 0;
+      color: #7f8c8d;
+      font-size: 15px;
+      text-transform: capitalize;
+    }
+
+    .info-group {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #e0e6ed;
+      padding: 12px 0;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #34495e;
+      font-size: 15px;
+      flex: 1;
+    }
+
+    .info-value {
+      text-align: right;
+      flex: 2;
+      font-size: 15px;
+      color: #555;
+    }
+
+    #guardianExtra {
+      margin-top: 25px;
+    }
+
+    .buttons-container {
+      margin-top: 30px;
+      display: none;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .btn {
+      display: none;
+      padding: 10px 18px;
+      font-size: 15px;
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      color: white;
+      min-width: 130px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-message {
+      background-color: #406185;
+    }
+
+    .btn-message:hover {
+      background-color: #314a66;
+    }
+
+    .btn-email {
+      background-color: #3b7ddd;
+    }
+
+    .btn-email:hover {
+      background-color: #2a5bb0;
+    }
+
+    .btn-schedule {
+      background-color: #27ae60;
+    }
+
+    .btn-schedule:hover {
+      background-color: #219150;
+    }
+
+    @media (max-width: 480px) {
+      .info-group {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .info-value {
+        text-align: left;
+        margin-top: 5px;
+      }
+
+      .buttons-container {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-card" id="profileCard">
+    <div class="profile-header">
+      <img alt="Profile Image" class="profile-image" id="profileImg">
+      <h2 id="userName">Loading...</h2>
+      <p id="userRole">Role</p>
+    </div>
+
+    <div class="info-group"><span class="info-label">Phone:</span><span class="info-value" id="phone">-</span></div>
+    <div class="info-group"><span class="info-label">Address:</span><span class="info-value" id="address">-</span></div>
+    <div class="info-group"><span class="info-label">Specialization:</span><span class="info-value" id="specialization">-</span></div>
+    <div class="info-group"><span class="info-label">Workplace:</span><span class="info-value" id="workplace">-</span></div>
+    <div class="info-group"><span class="info-label">About:</span><span class="info-value" id="bio">-</span></div>
+
+    <div id="guardianExtra" style="display:none;">
+      <div class="info-group"><span class="info-label">Initial State:</span><span class="info-value" id="initialState">-</span></div>
+    </div>
+
+    <div id="actionButtons" class="buttons-container">
+      <button class="btn btn-message" id="btnMessage">Send Message</button>
+      <button class="btn btn-email" id="btnEmail">Send Email</button>
+      <button class="btn btn-schedule" id="btnSchedule">View Schedule</button>
+    </div>
+  </div>
+
+  <script>
+    const userId = new URLSearchParams(window.location.search).get('id');
+    const currentUserStr = localStorage.getItem('user');
+    const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+
+    async function fetchUserProfile() {
+      try {
+        const res = await fetch(`http://localhost:4000/api/v1/profile/viewProfile/${userId}`, {
+          method: 'GET',
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          const { user, profile } = data;
+
+          document.getElementById('userName').textContent = user.name || 'Unknown';
+          document.getElementById('userRole').textContent = user.role || '';
+          document.getElementById('phone').textContent = profile?.phone || '-';
+          document.getElementById('address').textContent = profile?.address || '-';
+          document.getElementById('specialization').textContent = profile?.specialization || '-';
+          document.getElementById('workplace').textContent = profile?.workplace || '-';
+          document.getElementById('bio').textContent = profile?.bio || '-';
+
+          if (user.image) document.getElementById('profileImg').src = user.image;
+
+          if (user.role === 'guardian') {
+            document.getElementById('guardianExtra').style.display = 'block';
+            document.getElementById('initialState').textContent = user.childStatus || '-';
+          }
+
+          if (['admin', 'manager'].includes(currentUser?.role) && user.role === 'marketing_agents') {
+            document.getElementById('actionButtons').style.display = 'flex';
+            document.getElementById('btnMessage').style.display = 'block';
+          } else if (
+            !['guardian', 'marketing_agents'].includes(currentUser?.role) &&
+            ['guardian', 'specialist'].includes(user.role)
+          ) {
+            document.getElementById('actionButtons').style.display = 'flex';
+            document.getElementById('btnMessage').style.display = 'block';
+            document.getElementById('btnEmail').style.display = 'block';
+            document.getElementById('btnSchedule').style.display = 'block';
+          }
+
+      
+          if (currentUser?.role === 'specialist' && user.role === 'specialist') {
+            document.getElementById('btnSchedule').style.display = 'none';
+          }
+
+   
+          document.getElementById('btnMessage').onclick = () => {
+            const nameEncoded = encodeURIComponent(user.name);
+            const imageEncoded = encodeURIComponent(user.image);
+            window.location.href = `../Html/AllChat.html?receiverId=${user._id}&name=${nameEncoded}&image=${imageEncoded}`;
+          };
+
+          document.getElementById('btnEmail').onclick = () => {
+            window.location.href = `mailto:${user.email}`;
+          };
+
+          document.getElementById('btnSchedule').onclick = () => {
+            if (currentUser?.role === 'specialist' && user.role === 'guardian') {
+              window.location.href = `../Html/SchedulesPageGuardian.html?id=${user._id}`;
+            } else {
+              window.location.href = `../Html/viewSchedules.html?id=${user._id}`;
+            }
+          };
+
+        } else {
+          alert(data.message || 'حدث خطأ');
+        }
+      } catch (err) {
+        alert('فشل في تحميل البيانات');
+      }
+    }
+
+    fetchUserProfile();
+  </script>
+</body>
+</html>

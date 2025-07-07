@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Child Evaluation</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      direction: ltr;
+      background-color: #f5f6fa;
+      display: block;
+      margin: auto;
+      padding: 20px;
+    
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+
+    h2 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      margin-bottom: 35px;
+      border-left: 2px solid #5f9ddb;
+      padding-left: 18px;
+    }
+
+    .section > h3 {
+      margin-top: 0;
+      margin-bottom: 18px;
+      color: #2c3e50;
+      border-bottom: 2px solid #5f9ddb;
+      padding-bottom: 5px;
+    }
+
+    .subsection {
+      margin-left: 20px;
+      margin-bottom: 18px;
+    }
+
+    .subsection > h4 {
+      margin: 0 0 10px;
+      color: #2379cf;
+      font-weight: 600;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 4px;
+      color: #4a585c;
+    }
+
+    .field span {
+      display: block;
+      background-color: #ecf0f1;
+      padding: 10px 14px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .btn-container {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .btn {
+      background-color: #2980b9;
+      color: white;
+      padding: 12px 28px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .btn:hover {
+      background-color: #2471a3;
+    }
+
+  @media print {
+  body {
+    background-color: white;
+    padding: 0;
+  }
+
+  .btn-container {
+    display: none; 
+  }
+
+  .container {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+  }
+
+  .section, .subsection, .field {
+    page-break-inside: avoid;
+  }
+
+  .field span {
+    background-color: #fff;
+    border: 1px solid #ccc;
+  }
+
+  h2, h3, h4 {
+    color: black;
+  }
+}
+.logo {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #3fa6eb;
+    text-align: center;
+    margin-bottom: 30px;
+    text-shadow: 1px 1px 3px rgba(41, 128, 185, 0.5);
+    letter-spacing: 1.2px;
+  }
+  .logo-container {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .logo-img {
+    max-width: 120px;
+    height: auto;
+    display: block;
+    margin: 0 auto 10px auto;
+  }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+  
+    <div class="logo-container">
+  
+      <h2 class="logo">Child Evaluation</h2>
+  </div>
+    <div id="evaluationContent">
+      <p class="error">Loading evaluation...</p>
+    </div>
+    <div class="btn-container">
+      <button class="btn" onclick="window.print()">Print Report</button>
+    </div>
+    <label>الاخصائي المسؤول:</label>
+    <p><a id="specialistLink" href="#" style="color: #2980b9; text-decoration: underline; cursor: pointer;">جار التحميل...</a></p>
+  <input type="hidden" name="specialistId" id="specialistId">
+  <img src="../assets/images/med 1.png" alt="شعار مركز سكاي" class="logo-img" />
+  </div>
+
+  <script>
+    function formatLabel(key) {
+      return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+    }
+
+    const excludedKeys = ['_id', '__v', 'guardianId', 'specialistId', 'createdAt', 'updatedAt'];
+
+    function createField(label, value) {
+      return `
+        <div class="field">
+          <label>${label}</label>
+          <span>${value ?? 'لا يوجد تقييم'}</span>
+        </div>
+      `;
+    }
+
+    function renderObject(obj, level = 1) {
+      let html = '';
+      for (const key in obj) {
+        if (excludedKeys.includes(key)) continue;
+
+        const val = obj[key];
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          html += level === 1
+            ? `<section class="section"><h3>${formatLabel(key)}</h3>${renderObject(val, level + 1)}</section>`
+            : `<div class="subsection"><h4>${formatLabel(key)}</h4>${renderObject(val, level + 1)}</div>`;
+
+        } else if (Array.isArray(val)) {
+          if (val.length === 0) {
+            html += createField(formatLabel(key), 'لا توجد بيانات');
+          } else {
+            html += level === 1
+              ? `<section class="section"><h3>${formatLabel(key)}</h3>`
+              : `<div class="subsection"><h4>${formatLabel(key)}</h4>`;
+
+            val.forEach((item, idx) => {
+              if (typeof item === 'object') {
+                html += `<div class="subsection"><h4>${formatLabel(key)} ${idx + 1}</h4>${renderObject(item, level + 2)}</div>`;
+              } else {
+                html += createField(`${formatLabel(key)} ${idx + 1}`, item);
+              }
+            });
+
+            html += level === 1 ? `</section>` : `</div>`;
+          }
+        } else {
+          html += createField(formatLabel(key), val);
+        }
+      }
+      return html;
+    }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+  const token = localStorage.getItem("token");
+  const evalContainer = document.getElementById("evaluationContent");
+  const specialistNameEl = document.getElementById("specialistName");
+
+  if (!token) {
+    evalContainer.innerHTML = "<p class='error'>You must be logged in to view this page.</p>";
+    specialistNameEl.textContent = "غير متاح";
+    return;
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const guardianId = urlParams.get("id");
+
+  try {
+    const res = await fetch(`http://localhost:4000/api/v1/evaluation/get/${guardianId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      evalContainer.innerHTML = `<p class='error'>${data.message || "Evaluation not found."}</p>`;
+      specialistNameEl.textContent = "غير متاح";
+      return;
+    }
+
+    const evalData = data.evaluation;
+
+    const specialistLink = document.getElementById("specialistLink");
+    const specialistName = evalData.specialistId?.name || "غير متاح";
+    const specialistId = evalData.specialistId?._id;
+
+     if (specialistName && specialistId) {
+       specialistLink.textContent = specialistName;
+        specialistLink.href = `../Html/viewotherProfile.html?id=${specialistId}`;
+    } else {
+       specialistLink.textContent = "غير متاح";
+      specialistLink.removeAttribute("href");
+}
+
+  
+    evalContainer.innerHTML = renderObject(evalData);
+  } catch (err) {
+    console.error("Fetch error:", err);
+    evalContainer.innerHTML = "<p class='error'>Failed to load evaluation data.</p>";
+    specialistNameEl.textContent = "غير متاح";
+  }
+});
+  </script>
+</body>
+</html>
